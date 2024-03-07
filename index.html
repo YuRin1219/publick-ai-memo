@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>左メモ＆AIサイト</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- メモスペース -->
+        <div class="memo">
+            <textarea id="memoText" rows="10" cols="50" aria-label="メモ入力欄"></textarea>
+            <button id="saveButton">保存</button>
+        </div>
+        <!-- AIスペース -->
+        <div class="ai">
+            <div id="aiResponse" aria-live="polite" role="region" aria-label="AIの応答"></div>
+        </div>
+    </div>
+
+    <script>
+        const url = '/get-ai-response';
+
+        async function getAIResponse(prompt) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt })
+                });
+
+                const data = await response.json();
+                return data.aiResponse;
+            } catch (error) {
+                console.error('AIの応答を取得できませんでした。', error);
+                throw error;
+            }
+        }
+
+        document.getElementById('memoText').addEventListener('input', async function() {
+            const prompt = this.value;
+            try {
+                const aiResponse = await getAIResponse(prompt);
+                document.getElementById('aiResponse').innerText = aiResponse;
+            } catch (error) {
+                document.getElementById('aiResponse').innerText = 'AIの応答を取得できませんでした。';
+            }
+        });
+
+        document.getElementById('saveButton').addEventListener('click', function() {
+            const memoText = document.getElementById('memoText').value;
+            localStorage.setItem('memo', memoText);
+            // ユーザーに保存が完了したことを通知するなどのUI改善が可能
+        });
+
+        function getMemo() {
+            const memo = localStorage.getItem('memo');
+            if (memo) {
+                document.getElementById('memoText').value = memo;
+            }
+        }
+
+        getMemo();
+    </script>
+</body>
+</html>
